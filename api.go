@@ -9,37 +9,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// json writer
-func writeJson(w http.ResponseWriter, status int, v any) error {
-	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
-	return json.NewEncoder(w).Encode(v)
-}
-
-type ApiErr struct {
-	Error string
-}
-
-type apiFunc func(http.ResponseWriter, *http.Request) error
-
-func makeHttpHnadlerFunc(f apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			writeJson(w, http.StatusBadRequest, ApiErr{Error: err.Error()})
-		}
-	}
-}
-
-type ApiServer struct {
-	listenAddr string
-}
-
-func NewApiServer(listenAddr string) *ApiServer {
-	return &ApiServer{
-		listenAddr: listenAddr,
-	}
-}
-
 func (s *ApiServer) Run() {
 	router := mux.NewRouter()
 
@@ -80,4 +49,35 @@ func (s *ApiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) 
 
 func (s *ApiServer) handleTransfer(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+// json writer
+func writeJson(w http.ResponseWriter, status int, v any) error {
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
+	return json.NewEncoder(w).Encode(v)
+}
+
+type ApiErr struct {
+	Error string
+}
+
+type apiFunc func(http.ResponseWriter, *http.Request) error
+
+func makeHttpHnadlerFunc(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			writeJson(w, http.StatusBadRequest, ApiErr{Error: err.Error()})
+		}
+	}
+}
+
+type ApiServer struct {
+	listenAddr string
+}
+
+func NewApiServer(listenAddr string) *ApiServer {
+	return &ApiServer{
+		listenAddr: listenAddr,
+	}
 }
