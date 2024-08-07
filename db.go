@@ -74,5 +74,19 @@ func (d *PostgresDb) UpdateAccount(id int) error {
 	return nil
 }
 func (d *PostgresDb) GetAccoountById(id int) (*Account, error) {
-	return nil, nil
+
+	data, err := d.db.Query(`SELECT * FROM account WHERE id = $1`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Next() {
+		account := &Account{}
+		err := data.Scan(&account.Id, &account.FirstName, &account.LastName, &account.AccNumber, &account.Balance, &account.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		return account, nil
+	}
+	return nil, fmt.Errorf("Account not found %d", id)
 }
