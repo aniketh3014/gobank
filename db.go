@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/lib/pq"
 )
@@ -10,7 +11,7 @@ type Storage interface {
 	CreateAccount(*Account) error
 	DeleteAccount(int) error
 	UpdateAccount(int) error
-	GetAccoountById(int) *Account
+	GetAccoountById(int) (*Account, error)
 }
 
 type PostgresDb struct {
@@ -28,7 +29,50 @@ func NewPostgresDb() (*PostgresDb, error) {
 		return nil, err
 	}
 
-	return &PostgresDb{
+	pDb := &PostgresDb{
 		db: db,
-	}, nil
+	}
+
+	if err := pDb.init(); err != nil {
+		return nil, err
+	}
+
+	return pDb, nil
+}
+
+func (d *PostgresDb) init() error {
+	return d.CreateAccountTable()
+}
+
+func (d *PostgresDb) CreateAccountTable() error {
+	query := `CREATE TABLE IF NOT EXISTS account(
+		id SERIAL PRIMARY KEY,
+		first_name VARCHAR(50),
+		last_name VARCHAR(50),
+		accNumber SERIAL,
+		balance SERIAL,
+		created_at TIMESTAMP
+	)`
+	_, err := d.db.Exec(query)
+	return err
+}
+
+func (d *PostgresDb) CreateAccount(acc *Account) error {
+	query := `INSERT INTO account (first_name, last_name, accNumber, balance, created_at) VALUES ($1, $2, $3, $4, $5)`
+	res, err := d.db.Query(query, acc.FirstName, acc.LastName, acc.AccNumber, acc.Balance, acc.CreatedAt)
+
+	if err != nil {
+		return err
+	}
+	fmt.Println(res)
+	return nil
+}
+func (d *PostgresDb) DeleteAccount(id int) error {
+	return nil
+}
+func (d *PostgresDb) UpdateAccount(id int) error {
+	return nil
+}
+func (d *PostgresDb) GetAccoountById(id int) (*Account, error) {
+	return nil, nil
 }
