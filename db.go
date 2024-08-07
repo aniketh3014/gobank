@@ -68,6 +68,11 @@ func (d *PostgresDb) CreateAccount(acc *Account) error {
 	return nil
 }
 func (d *PostgresDb) DeleteAccount(id int) error {
+
+	_, err := d.db.Query(`DELETE FROM account WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("unable to delete account")
+	}
 	return nil
 }
 func (d *PostgresDb) UpdateAccount(id int) error {
