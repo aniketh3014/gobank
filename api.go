@@ -9,6 +9,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type ApiServer struct {
+	store      Storage
+	listenAddr string
+}
+
+func NewApiServer(listenAddr string, store Storage) *ApiServer {
+	return &ApiServer{
+		listenAddr: listenAddr,
+		store:      store,
+	}
+}
+
 func (s *ApiServer) Run() {
 	router := mux.NewRouter()
 
@@ -53,8 +65,8 @@ func (s *ApiServer) handleTransfer(w http.ResponseWriter, r *http.Request) error
 
 // json writer
 func writeJson(w http.ResponseWriter, status int, v any) error {
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(v)
 }
 
@@ -69,15 +81,5 @@ func makeHttpHnadlerFunc(f apiFunc) http.HandlerFunc {
 		if err := f(w, r); err != nil {
 			writeJson(w, http.StatusBadRequest, ApiErr{Error: err.Error()})
 		}
-	}
-}
-
-type ApiServer struct {
-	listenAddr string
-}
-
-func NewApiServer(listenAddr string) *ApiServer {
-	return &ApiServer{
-		listenAddr: listenAddr,
 	}
 }
