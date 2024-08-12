@@ -27,6 +27,8 @@ func (s *ApiServer) Run() {
 
 	router.HandleFunc("/account", makeHttpHnadlerFunc(s.handleAccount))
 	router.HandleFunc("/account/{id}", makeHttpHnadlerFunc(s.handleGetAccount))
+	router.HandleFunc("/transfer", makeHttpHnadlerFunc(s.handleTransfer))
+
 	log.Println("Api server is running on port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }
@@ -48,7 +50,7 @@ func (s *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return err
 	}
-
+	defer r.Body.Close()
 	account := NewAccount(req.FirstName, req.LastName)
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
@@ -87,11 +89,17 @@ func (s *ApiServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) 
 	if err := s.store.DeleteAccount(id); err != nil {
 		return err
 	}
-	return nil
+	return writeJson(w, http.StatusOK, map[string]int{"deleted": id})
 }
 
 func (s *ApiServer) handleTransfer(w http.ResponseWriter, r *http.Request) error {
-	return nil
+
+	transferreq := new(TransferReq)
+	if err := json.NewDecoder(r.Body).Decode(transferreq); err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	return writeJson(w, http.StatusOK, transferreq)
 }
 
 // json writer

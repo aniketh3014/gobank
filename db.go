@@ -25,10 +25,6 @@ func NewPostgresDb() (*PostgresDb, error) {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
 	pDb := &PostgresDb{
 		db: db,
 	}
