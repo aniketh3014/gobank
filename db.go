@@ -89,5 +89,5 @@ func (d *PostgresDb) GetAccoountById(id int) (*Account, error) {
 		}
 		return account, nil
 	}
-	return nil, fmt.Errorf("Account not found %d", id)
+	return nil, fmt.Errorf("account with id: %d not found", id)
 }
