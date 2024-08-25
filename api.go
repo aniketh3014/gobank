@@ -57,6 +57,12 @@ func (s *ApiServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
+
+	tokenString, err := signJWT(account)
+	if err != nil {
+		return err
+	}
+	fmt.Println(tokenString)
 	return writeJson(w, http.StatusOK, account)
 }
 
@@ -104,6 +110,18 @@ func (s *ApiServer) handleTransfer(w http.ResponseWriter, r *http.Request) error
 	return writeJson(w, http.StatusOK, transferreq)
 }
 
+func signJWT(account *Account) (string, error) {
+
+	secret := os.Getenv("JWT_SECRET")
+
+	claims := &jwt.MapClaims{
+		"accountNumber": account.AccNumber,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
 func jwtAuth(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("token")
@@ -122,12 +140,11 @@ func jwtAuth(handlerFunc http.HandlerFunc) http.HandlerFunc {
 func validateJWT(tokenString string) (*jwt.Token, error) {
 	secret := os.Getenv("JWT_SECRET")
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
+
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return []byte(secret), nil
 	})
 }
